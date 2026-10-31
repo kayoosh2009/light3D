@@ -2,8 +2,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
-pub const PROJECTS_DIR: &str = "Light3D_Projects";
-
 #[derive(Clone, Debug)]
 pub struct ProjectInfo {
     pub name: String,
@@ -14,21 +12,31 @@ pub struct ProjectInfo {
 pub struct ProjectManager;
 
 impl ProjectManager {
-    /// Создает базовую директорию для проектов, если она не существует
+    /// Возвращает путь к директории проектов пользователя на Linux
+    pub fn get_projects_dir() -> PathBuf {
+        let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
+        PathBuf::from(home)
+            .join(".local")
+            .join("share")
+            .join("light3D")
+            .join("projects")
+    }
+
+    /// Создает директорию проектов, если её еще нет
     pub fn ensure_project_dir() -> PathBuf {
-        let path = Path::new(PROJECTS_DIR);
+        let path = Self::get_projects_dir();
         if !path.exists() {
-            fs::create_dir_all(path).expect("Не удалось создать папку проектов");
+            fs::create_dir_all(&path).expect("Failed to create user projects directory");
         }
-        path.to_path_buf()
+        path
     }
 
     /// Получает список всех папок-проектов с метаданными
     pub fn list_projects() -> Vec<ProjectInfo> {
-        Self::ensure_project_dir();
+        let dir = Self::ensure_project_dir();
         let mut list = Vec::new();
 
-        if let Ok(entries) = fs::read_dir(PROJECTS_DIR) {
+        if let Ok(entries) = fs::read_dir(dir) {
             for entry in entries.flatten() {
                 if let Ok(file_type) = entry.file_type() {
                     if file_type.is_dir() {
@@ -74,9 +82,9 @@ impl ProjectManager {
         "999".into()
     }
 
-    /// Создает новую папку проекта
+    /// Создает новую папку проекта в директории пользователя
     pub fn create_project(mut name: String) -> String {
-        Self::ensure_project_dir();
+        let base = Self::ensure_project_dir();
         let trimmed = name.trim();
         if trimmed.is_empty() {
             name = Self::next_default_name();
@@ -84,9 +92,9 @@ impl ProjectManager {
             name = trimmed.to_string();
         }
 
-        let project_path = Path::new(PROJECTS_DIR).join(&name);
+        let project_path = base.join(&name);
         if !project_path.exists() {
-            fs::create_dir_all(&project_path).expect("Не удалось создать проект");
+            fs::create_dir_all(&project_path).expect("Failed to create project directory");
         }
 
         name

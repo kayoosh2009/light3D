@@ -1,9 +1,8 @@
-use std::path::Path;
 use bevy::prelude::*;
 use bevy::render::view::screenshot::ScreenshotManager;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{egui, EguiContexts};
-use crate::project_manager::PROJECTS_DIR;
+use crate::project_manager::ProjectManager;
 use crate::{AppState, CurrentProject};
 
 pub fn editor_ui_system(
@@ -19,8 +18,7 @@ pub fn editor_ui_system(
         egui::menu::bar(ui, |ui| {
             if ui.button("⏴ Hub").clicked() {
                 if let Ok((window_entity, mut window)) = windows.get_single_mut() {
-                    // Сохраняем скриншот последнего кадра проекта
-                    let path = Path::new(PROJECTS_DIR)
+                    let path = ProjectManager::get_projects_dir()
                         .join(&current_project.name)
                         .join("preview.png");
                     

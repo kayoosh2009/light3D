@@ -40,26 +40,45 @@ pub fn hub_ui_system(
     mut current_project: ResMut<CurrentProject>,
     mut windows: Query<&mut Window>,
 ) {
-    // Ленивая загрузка иконки add.png
+    // 1. Предзагрузка иконки добавления проекта
     if state.add_texture.is_none() {
         let handle: Handle<Image> = asset_server.load("icons/add.png");
         let tex_id = contexts.add_image(handle);
         state.add_texture = Some(tex_id);
     }
 
+    // 2. Предзагрузка скриншотов проектов ДО вызова UI closure
+    let mut pending_textures = Vec::new();
+    for proj in &state.projects {
+        if !state.project_textures.contains_key(&proj.name) {
+            if let Some(ref path) = proj.preview_path {
+                let handle: Handle<Image> = asset_server.load(path.clone());
+                let tex_id = contexts.add_image(handle);
+                pending_textures.push((proj.name.clone(), tex_id));
+            }
+        }
+    }
+    for (name, tex_id) in pending_textures {
+        state.project_textures.insert(name, tex_id);
+    }
+
+    let mut selected_to_open = None;
+    let mut trigger_create_modal = false;
+
+    // 3. Отрисовка UI
     let ctx = contexts.ctx_mut();
 
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.heading("light3D");
-        ui.label("Выберите проект для открытия или создайте новый:");
+        ui.label("Select a project to open or create a new one:");
         ui.add_space(15.0);
 
         let card_w = 150.0;
-        let card_h = 200.0; // Соотношение сторон 3:4
+        let card_h = 200.0; // 3:4 aspect ratio
 
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
-                // Карточка "Создать новый проект"
+                // Card: "New Project"
                 let (rect, response) = ui.allocate_exact_size(
                     egui::vec2(card_w, card_h),
                     egui::Sense::click(),
@@ -95,16 +114,16 @@ pub fn hub_ui_system(
                 ui.painter().text(
                     egui::pos2(rect.center().x, rect.max.y - 25.0),
                     egui::Align2::CENTER_CENTER,
-                    "Новый проект",
+                    "New Project",
                     egui::FontId::proportional(14.0),
                     egui::Color32::LIGHT_GRAY,
                 );
 
                 if response.clicked() {
-                    state.show_create_modal = true;
+                    trigger_create_modal = true;
                 }
 
-                // Карточки существующих проектов
+                // Project Cards
                 for proj in &state.projects {
                     let (card_rect, card_resp) = ui.allocate_exact_size(
                         egui::vec2(card_w, card_h),
@@ -123,16 +142,8 @@ pub fn hub_ui_system(
                         8.0,
                         egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(60, 60, 65)),
                     );
-                    // Загрузка текстуры превью, если есть файл и еще не добавлена
-                    if !state.project_textures.contains_key(&proj.name) {
-                        if let Some(ref path) = proj.preview_path {
-                            let handle: Handle<Image> = asset_server.load(path.clone());
-                            let tex_id = contexts.add_image(handle);
-                            state.project_textures.insert(proj.name.clone(), tex_id);
-                        }
-                    }
 
-                    // Область для превью (верхние 130px)
+                    // Preview Area (top 125px)
                     let preview_rect = egui::Rect::from_min_size(
                         card_rect.min + egui::vec2(6.0, 6.0),
                         egui::vec2(card_w - 12.0, 125.0),
@@ -153,7 +164,7 @@ pub fn hub_ui_system(
                         );
                     }
 
-                    // Название проекта
+                    // Project Name
                     ui.painter().text(
                         egui::pos2(card_rect.min.x + 10.0, card_rect.min.y + 145.0),
                         egui::Align2::LEFT_TOP,
@@ -162,7 +173,7 @@ pub fn hub_ui_system(
                         egui::Color32::WHITE,
                     );
 
-                    // Дата изменения
+                    // Modified Date
                     ui.painter().text(
                         egui::pos2(card_rect.min.x + 10.0, card_rect.min.y + 172.0),
                         egui::Align2::LEFT_TOP,
@@ -172,38 +183,46 @@ pub fn hub_ui_system(
                     );
 
                     if card_resp.clicked() {
-                        current_project.name = proj.name.clone();
-                        if let Ok(mut window) = windows.get_single_mut() {
-                            window.set_maximized(true);
-                            window.title = format!("light3D — {}", proj.name);
-                        }
-                        next_state.set(AppState::Editor);
+                        selected_to_open = Some(proj.name.clone());
                     }
                 }
             });
         });
     });
 
-    // Модальное окно создания проекта
+    if trigger_create_modal {
+        state.show_create_modal = true;
+    }
+
+    if let Some(name) = selected_to_open {
+        current_project.name = name.clone();
+        if let Ok(mut window) = windows.get_single_mut() {
+            window.set_maximized(true);
+            window.title = format!("light3D — {}", name);
+        }
+        next_state.set(AppState::Editor);
+    }
+
+    // Modal Dialog
     if state.show_create_modal {
-        egui::Window::new("Создание проекта")
+        egui::Window::new("Create Project")
             .collapsible(false)
             .resizable(false)
             .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
             .show(ctx, |ui| {
-                ui.label("Введите название проекта (оставьте пустым для автоимени):");
+                ui.label("Project name (leave empty for auto-generated name):");
                 ui.text_edit_singleline(&mut state.new_project_name);
                 ui.add_space(8.0);
 
                 ui.horizontal(|ui| {
-                    if ui.button("Создать").clicked() {
+                    if ui.button("Create").clicked() {
                         ProjectManager::create_project(state.new_project_name.clone());
                         state.new_project_name.clear();
                         state.projects = ProjectManager::list_projects();
                         state.show_create_modal = false;
                     }
 
-                    if ui.button("Отмена").clicked() {
+                    if ui.button("Cancel").clicked() {
                         state.new_project_name.clear();
                         state.show_create_modal = false;
                     }
