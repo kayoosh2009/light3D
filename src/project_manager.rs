@@ -1,7 +1,14 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
 pub const PROJECTS_DIR: &str = "Light3D_Projects";
+
+#[derive(Clone, Debug)]
+pub struct ProjectInfo {
+    pub name: String,
+    pub modified: String,
+}
 
 pub struct ProjectManager;
 
