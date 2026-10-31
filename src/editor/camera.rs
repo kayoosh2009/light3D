@@ -31,7 +31,7 @@ pub fn spawn_editor_camera(
     // Тестовый куб по центру (0,0,0)
     commands.spawn(PbrBundle {
         mesh: meshes.add(Cuboid::new(1.0, 1.0, 1.0)),
-        material: materials.add(Color::srgb(0.2, 0.6, 0.9)),
+        material: materials.add(Color::rgb(0.2, 0.6, 0.9)),
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
         ..default()
     });
