@@ -22,8 +22,8 @@ impl ProjectManager {
         path.to_path_buf()
     }
 
-    /// Получает список всех папок-проектов
-    pub fn list_projects() -> Vec<String> {
+    /// Получает список всех папок-проектов с метаданными
+    pub fn list_projects() -> Vec<ProjectInfo> {
         Self::ensure_project_dir();
         let mut list = Vec::new();
 
@@ -32,13 +32,24 @@ impl ProjectManager {
                 if let Ok(file_type) = entry.file_type() {
                     if file_type.is_dir() {
                         if let Ok(name) = entry.file_name().into_string() {
-                            list.push(name);
+                            let modified = entry
+                                .metadata()
+                                .and_then(|m| m.modified())
+                                .unwrap_or(SystemTime::now());
+                            
+                            let datetime: chrono::DateTime<chrono::Local> = modified.into();
+                            let formatted_date = datetime.format("%d.%m.%Y %H:%M").to_string();
+
+                            list.push(ProjectInfo {
+                                name,
+                                modified: formatted_date,
+                            });
                         }
                     }
                 }
             }
         }
-        list.sort();
+        list.sort_by(|a, b| a.name.cmp(&b.name));
         list
     }
 
@@ -47,7 +58,7 @@ impl ProjectManager {
         let projects = Self::list_projects();
         for i in 0..1000 {
             let candidate = format!("{:03}", i);
-            if !projects.contains(&candidate) {
+            if !projects.iter().any(|p| p.name == candidate) {
                 return candidate;
             }
         }
