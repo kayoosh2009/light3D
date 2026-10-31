@@ -1,13 +1,27 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiPlugin};
+use bevy_egui::EguiPlugin;
 
+mod editor;
 mod project_manager;
 mod ui;
 
+use editor::EditorPlugin;
+use ui::editor_ui::editor_ui_system;
 use ui::hub::{hub_ui_system, HubState};
 
+#[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
+pub enum AppState {
+    #[default]
+    Hub,
+    Editor,
+}
+
+#[derive(Resource, Default)]
+pub struct CurrentProject {
+    pub name: String,
+}
+
 fn main() {
-    // Гарантируем создание папки Light3D_Projects при запуске
     project_manager::ProjectManager::ensure_project_dir();
 
     App::new()
@@ -20,7 +34,13 @@ fn main() {
             ..default()
         }))
         .add_plugins(EguiPlugin)
+        .init_state::<AppState>()
         .init_resource::<HubState>()
-        .add_systems(Update, hub_ui_system)
+        .init_resource::<CurrentProject>()
+        .add_plugins(EditorPlugin)
+        // Hub системы
+        .add_systems(Update, hub_ui_system.run_if(in_state(AppState::Hub)))
+        // Editor UI системы
+        .add_systems(Update, editor_ui_system.run_if(in_state(AppState::Editor)))
         .run();
 }

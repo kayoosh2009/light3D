@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 use crate::project_manager::{ProjectInfo, ProjectManager};
+use crate::{AppState, CurrentProject};
 
 #[derive(Resource)]
 pub struct HubState {
@@ -25,6 +26,9 @@ pub fn hub_ui_system(
     mut contexts: EguiContexts,
     mut state: ResMut<HubState>,
     asset_server: Res<AssetServer>,
+    mut next_state: ResMut<NextState<AppState>>,
+    mut current_project: ResMut<CurrentProject>,
+    mut windows: Query<&mut Window>,
 ) {
     // Ленивая загрузка иконки add.png
     if state.add_texture.is_none() {
@@ -61,7 +65,7 @@ pub fn hub_ui_system(
                 ui.painter().rect_stroke(
                     rect,
                     8.0,
-                    egui::Stroke::new(1.0, egui::Color32::from_rgb(70, 70, 75)),
+                    egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(70, 70, 75)),
                 );
 
                 if let Some(tex) = state.add_texture {
@@ -107,9 +111,8 @@ pub fn hub_ui_system(
                     ui.painter().rect_stroke(
                         card_rect,
                         8.0,
-                        egui::Stroke::new(1.0, egui::Color32::from_rgb(60, 60, 65)),
+                        egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(60, 60, 65)),
                     );
-
                     // Область для превью (верхние 130px)
                     let preview_rect = egui::Rect::from_min_size(
                         card_rect.min + egui::vec2(6.0, 6.0),
@@ -140,7 +143,12 @@ pub fn hub_ui_system(
                     );
 
                     if card_resp.clicked() {
-                        println!("Открытие проекта: {}", proj.name);
+                        current_project.name = proj.name.clone();
+                        if let Ok(mut window) = windows.get_single_mut() {
+                            window.set_maximized(true);
+                            window.title = format!("light3D — {}", proj.name);
+                        }
+                        next_state.set(AppState::Editor);
                     }
                 }
             });
