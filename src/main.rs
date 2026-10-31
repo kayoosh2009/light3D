@@ -14,7 +14,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "light3D - Launcher".into(),
-                resolution: (600.0, 400.0).into(),
+                resolution: (600.0_f32, 400.0_f32).into(),
                 ..default()
             }),
             ..default()
