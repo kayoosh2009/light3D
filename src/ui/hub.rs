@@ -45,14 +45,19 @@ pub fn hub_ui_system(
         ui.label("Существующие проекты:");
 
         // Список проектов
+        let mut clicked_project = None;
         egui::ScrollArea::vertical().show(ui, |ui| {
             for project in &state.projects {
                 let is_selected = state.selected_project.as_ref() == Some(project);
                 if ui.selectable_label(is_selected, project).clicked() {
-                    state.selected_project = Some(project.clone());
+                    clicked_project = Some(project.clone());
                 }
             }
         });
+
+        if let Some(project) = clicked_project {
+            state.selected_project = Some(project);
+        }
 
         ui.add_space(10.0);
         if let Some(ref selected) = state.selected_project {
