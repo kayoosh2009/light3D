@@ -8,6 +8,7 @@ pub const PROJECTS_DIR: &str = "Light3D_Projects";
 pub struct ProjectInfo {
     pub name: String,
     pub modified: String,
+    pub preview_path: Option<PathBuf>,
 }
 
 pub struct ProjectManager;
@@ -40,9 +41,17 @@ impl ProjectManager {
                             let datetime: chrono::DateTime<chrono::Local> = modified.into();
                             let formatted_date = datetime.format("%d.%m.%Y %H:%M").to_string();
 
+                            let preview = entry.path().join("preview.png");
+                            let preview_path = if preview.exists() {
+                                Some(preview)
+                            } else {
+                                None
+                            };
+
                             list.push(ProjectInfo {
                                 name,
                                 modified: formatted_date,
+                                preview_path,
                             });
                         }
                     }

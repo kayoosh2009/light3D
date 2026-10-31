@@ -7,7 +7,7 @@ mod ui;
 
 use editor::EditorPlugin;
 use ui::editor_ui::editor_ui_system;
-use ui::hub::{hub_ui_system, HubState};
+use ui::hub::{hub_ui_system, refresh_hub_on_enter, HubState};
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum AppState {
@@ -39,6 +39,7 @@ fn main() {
         .init_resource::<CurrentProject>()
         .add_plugins(EditorPlugin)
         // Hub системы
+        .add_systems(OnEnter(AppState::Hub), refresh_hub_on_enter)
         .add_systems(Update, hub_ui_system.run_if(in_state(AppState::Hub)))
         // Editor UI системы
         .add_systems(Update, editor_ui_system.run_if(in_state(AppState::Editor)))

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 use crate::project_manager::{ProjectInfo, ProjectManager};
@@ -7,6 +8,7 @@ use crate::{AppState, CurrentProject};
 pub struct HubState {
     pub projects: Vec<ProjectInfo>,
     pub add_texture: Option<egui::TextureId>,
+    pub project_textures: HashMap<String, egui::TextureId>,
     pub show_create_modal: bool,
     pub new_project_name: String,
 }
@@ -16,10 +18,18 @@ impl Default for HubState {
         Self {
             projects: ProjectManager::list_projects(),
             add_texture: None,
+            project_textures: HashMap::new(),
             show_create_modal: false,
             new_project_name: String::new(),
         }
     }
+}
+
+pub fn refresh_hub_on_enter(
+    mut state: ResMut<HubState>,
+) {
+    state.projects = ProjectManager::list_projects();
+    state.project_textures.clear();
 }
 
 pub fn hub_ui_system(
@@ -113,16 +123,35 @@ pub fn hub_ui_system(
                         8.0,
                         egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(60, 60, 65)),
                     );
+                    // Загрузка текстуры превью, если есть файл и еще не добавлена
+                    if !state.project_textures.contains_key(&proj.name) {
+                        if let Some(ref path) = proj.preview_path {
+                            let handle: Handle<Image> = asset_server.load(path.clone());
+                            let tex_id = contexts.add_image(handle);
+                            state.project_textures.insert(proj.name.clone(), tex_id);
+                        }
+                    }
+
                     // Область для превью (верхние 130px)
                     let preview_rect = egui::Rect::from_min_size(
                         card_rect.min + egui::vec2(6.0, 6.0),
                         egui::vec2(card_w - 12.0, 125.0),
                     );
-                    ui.painter().rect_filled(
-                        preview_rect,
-                        4.0,
-                        egui::Color32::from_rgb(25, 25, 28),
-                    );
+
+                    if let Some(&tex_id) = state.project_textures.get(&proj.name) {
+                        ui.painter().image(
+                            tex_id,
+                            preview_rect,
+                            egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+                            egui::Color32::WHITE,
+                        );
+                    } else {
+                        ui.painter().rect_filled(
+                            preview_rect,
+                            4.0,
+                            egui::Color32::from_rgb(25, 25, 28),
+                        );
+                    }
 
                     // Название проекта
                     ui.painter().text(
