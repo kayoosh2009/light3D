@@ -26,14 +26,22 @@ pub fn spawn_editor_camera(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // 3D Camera направленная в центр сцены (0, 0, 0)
-    let cam_settings = EditorCamera::default();
-    let rot = Quat::from_euler(EulerRot::YXZ, cam_settings.yaw, cam_settings.pitch, 0.0);
-    let cam_pos = Vec3::new(7.0, 6.0, 7.0);
+    // Точка фокуса — центр куба
+    let target = Vec3::new(0.0, 0.5, 0.0);
+    let cam_pos = Vec3::new(7.0, 5.5, 7.0);
+    let look_transform = Transform::from_translation(cam_pos).looking_at(target, Vec3::Y);
+    let (yaw, pitch, _) = look_transform.rotation.to_euler(EulerRot::YXZ);
+
+    let cam_settings = EditorCamera {
+        pitch,
+        yaw,
+        move_speed: 12.0,
+        sensitivity: 0.003,
+    };
 
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_translation(cam_pos).with_rotation(rot),
+            transform: look_transform,
             ..default()
         },
         cam_settings,

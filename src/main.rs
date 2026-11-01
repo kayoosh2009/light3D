@@ -8,7 +8,7 @@ mod ui;
 use editor::EditorPlugin;
 use ui::editor_ui::editor_ui_system;
 use ui::hub::{hub_ui_system, refresh_hub_on_enter, HubState};
-use ui::loading::{loading_ui_system, LoadingState};
+use ui::loading::{loading_ui_system, reset_loading_progress, LoadingState};
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum AppState {
@@ -42,6 +42,7 @@ fn main() {
         .init_resource::<CurrentProject>()
         .add_plugins(EditorPlugin)
         // Loading системы
+        .add_systems(OnEnter(AppState::Loading), reset_loading_progress)
         .add_systems(Update, loading_ui_system.run_if(in_state(AppState::Loading)))
         // Hub системы
         .add_systems(OnEnter(AppState::Hub), refresh_hub_on_enter)
