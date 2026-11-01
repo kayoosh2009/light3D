@@ -8,10 +8,12 @@ mod ui;
 use editor::EditorPlugin;
 use ui::editor_ui::editor_ui_system;
 use ui::hub::{hub_ui_system, refresh_hub_on_enter, HubState};
+use ui::loading::{loading_ui_system, LoadingState};
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum AppState {
     #[default]
+    Loading,
     Hub,
     Editor,
 }
@@ -35,9 +37,12 @@ fn main() {
         }))
         .add_plugins(EguiPlugin)
         .init_state::<AppState>()
+        .init_resource::<LoadingState>()
         .init_resource::<HubState>()
         .init_resource::<CurrentProject>()
         .add_plugins(EditorPlugin)
+        // Loading системы
+        .add_systems(Update, loading_ui_system.run_if(in_state(AppState::Loading)))
         // Hub системы
         .add_systems(OnEnter(AppState::Hub), refresh_hub_on_enter)
         .add_systems(Update, hub_ui_system.run_if(in_state(AppState::Hub)))

@@ -13,8 +13,8 @@ pub struct EditorCamera {
 impl Default for EditorCamera {
     fn default() -> Self {
         Self {
-            pitch: -0.4,
-            yaw: -0.7,
+            pitch: -0.52, // Около -30 градусов наклон вниз
+            yaw: -0.78,   // -45 градусов поворот вокруг Y
             move_speed: 12.0,
             sensitivity: 0.003,
         }
@@ -26,13 +26,14 @@ pub fn spawn_editor_camera(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // 3D Camera
+    // 3D Camera направленная в центр сцены (0, 0, 0)
     let cam_settings = EditorCamera::default();
     let rot = Quat::from_euler(EulerRot::YXZ, cam_settings.yaw, cam_settings.pitch, 0.0);
+    let cam_pos = Vec3::new(7.0, 6.0, 7.0);
 
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(8.0, 7.0, 10.0).with_rotation(rot),
+            transform: Transform::from_translation(cam_pos).with_rotation(rot),
             ..default()
         },
         cam_settings,
