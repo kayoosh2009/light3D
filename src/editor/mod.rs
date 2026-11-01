@@ -8,8 +8,9 @@ pub struct EditorPlugin;
 
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
+        // Создаем сцену заранее в фоне при Loading, чтобы избежать мигания черного экрана
         app.add_systems(
-            OnEnter(AppState::Editor),
+            OnEnter(AppState::Loading),
             (camera::spawn_editor_camera, grid::spawn_grid),
         )
         .add_systems(

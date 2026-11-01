@@ -27,6 +27,7 @@ fn main() {
     project_manager::ProjectManager::ensure_project_dir();
 
     App::new()
+        .insert_resource(ClearColor(Color::rgb(0.10, 0.10, 0.11)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "light3D - Launcher".into(),
