@@ -13,8 +13,8 @@ use ui::loading::{loading_ui_system, LoadingState};
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum AppState {
     #[default]
-    Loading,
     Hub,
+    Loading,
     Editor,
 }
 

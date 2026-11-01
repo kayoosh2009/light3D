@@ -200,7 +200,7 @@ pub fn hub_ui_system(
             window.set_maximized(true);
             window.title = format!("light3D — {}", name);
         }
-        next_state.set(AppState::Editor);
+        next_state.set(AppState::Loading);
     }
 
     // Modal Dialog

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
-use crate::AppState;
+use crate::{AppState, CurrentProject};
 
 #[derive(Resource)]
 pub struct LoadingState {
@@ -12,9 +12,13 @@ impl Default for LoadingState {
     fn default() -> Self {
         Self {
             progress: 0.0,
-            speed: 1.2, // Скорость заполнения прогресс-бара
+            speed: 1.6, // Скорость открытия проекта
         }
     }
+}
+
+pub fn reset_loading_progress(mut state: ResMut<LoadingState>) {
+    state.progress = 0.0;
 }
 
 pub fn loading_ui_system(
@@ -22,23 +26,24 @@ pub fn loading_ui_system(
     mut contexts: EguiContexts,
     mut state: ResMut<LoadingState>,
     mut next_state: ResMut<NextState<AppState>>,
+    current_project: Res<CurrentProject>,
 ) {
     state.progress += state.speed * time.delta_seconds();
 
     if state.progress >= 1.0 {
-        next_state.set(AppState::Hub);
+        next_state.set(AppState::Editor);
         return;
     }
 
     let ctx = contexts.ctx_mut();
 
     egui::CentralPanel::default()
-        .frame(egui::Frame::none().fill(egui::Color32::from_rgb(30, 30, 33)))
+        .frame(egui::Frame::none().fill(egui::Color32::from_rgb(26, 26, 28)))
         .show(ctx, |ui| {
             let screen_rect = ui.max_rect();
             let center = screen_rect.center();
 
-            // Логотип light3D
+            // Заголовок программы
             ui.painter().text(
                 egui::pos2(center.x, center.y - 40.0),
                 egui::Align2::CENTER_CENTER,
@@ -47,11 +52,12 @@ pub fn loading_ui_system(
                 egui::Color32::WHITE,
             );
 
-            // Подзаголовок
+            // Статус с именем проекта
+            let label = format!("Opening '{}'...", current_project.name);
             ui.painter().text(
                 egui::pos2(center.x, center.y - 10.0),
                 egui::Align2::CENTER_CENTER,
-                "Loading workspace...",
+                label,
                 egui::FontId::proportional(14.0),
                 egui::Color32::GRAY,
             );
