@@ -44,7 +44,10 @@ fn main() {
         .add_plugins(EditorPlugin)
         // Loading системы
         .add_systems(OnEnter(AppState::Loading), reset_loading_progress)
-        .add_systems(Update, loading_ui_system.run_if(in_state(AppState::Loading)))
+        .add_systems(
+            Update,
+            loading_ui_system.run_if(in_state(AppState::Loading)),
+        )
         // Hub системы
         .add_systems(OnEnter(AppState::Hub), refresh_hub_on_enter)
         .add_systems(Update, hub_ui_system.run_if(in_state(AppState::Hub)))

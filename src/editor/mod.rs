@@ -1,8 +1,8 @@
 pub mod camera;
 pub mod grid;
 
-use bevy::prelude::*;
 use crate::AppState;
+use bevy::prelude::*;
 
 pub struct EditorPlugin;
 

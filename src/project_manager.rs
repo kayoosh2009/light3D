@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::SystemTime;
 
 #[derive(Clone, Debug)]
@@ -45,7 +45,7 @@ impl ProjectManager {
                                 .metadata()
                                 .and_then(|m| m.modified())
                                 .unwrap_or(SystemTime::now());
-                            
+
                             let datetime: chrono::DateTime<chrono::Local> = modified.into();
                             let formatted_date = datetime.format("%d.%m.%Y %H:%M").to_string();
 

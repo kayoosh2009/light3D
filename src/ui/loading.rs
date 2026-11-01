@@ -1,6 +1,6 @@
+use crate::{AppState, CurrentProject};
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
-use crate::{AppState, CurrentProject};
 
 #[derive(Resource)]
 pub struct LoadingState {
@@ -71,14 +71,14 @@ pub fn loading_ui_system(
             );
 
             // Фон полосы
-            ui.painter().rect_filled(bar_bg_rect, 3.0, egui::Color32::from_rgb(45, 45, 50));
+            ui.painter()
+                .rect_filled(bar_bg_rect, 3.0, egui::Color32::from_rgb(45, 45, 50));
 
             // Заполняемая часть
             let fill_w = bar_w * state.progress.clamp(0.0, 1.0);
-            let bar_fill_rect = egui::Rect::from_min_size(
-                bar_bg_rect.min,
-                egui::vec2(fill_w, bar_h),
-            );
-            ui.painter().rect_filled(bar_fill_rect, 3.0, egui::Color32::from_rgb(80, 140, 255));
+            let bar_fill_rect =
+                egui::Rect::from_min_size(bar_bg_rect.min, egui::vec2(fill_w, bar_h));
+            ui.painter()
+                .rect_filled(bar_fill_rect, 3.0, egui::Color32::from_rgb(80, 140, 255));
         });
 }

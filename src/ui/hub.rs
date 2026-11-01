@@ -1,8 +1,8 @@
-use std::collections::HashMap;
-use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts};
 use crate::project_manager::{ProjectInfo, ProjectManager};
 use crate::{AppState, CurrentProject};
+use bevy::prelude::*;
+use bevy_egui::{egui, EguiContexts};
+use std::collections::HashMap;
 
 #[derive(Resource)]
 pub struct HubState {
@@ -25,9 +25,7 @@ impl Default for HubState {
     }
 }
 
-pub fn refresh_hub_on_enter(
-    mut state: ResMut<HubState>,
-) {
+pub fn refresh_hub_on_enter(mut state: ResMut<HubState>) {
     state.projects = ProjectManager::list_projects();
     state.project_textures.clear();
 }
@@ -79,10 +77,8 @@ pub fn hub_ui_system(
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
                 // Card: "New Project"
-                let (rect, response) = ui.allocate_exact_size(
-                    egui::vec2(card_w, card_h),
-                    egui::Sense::click(),
-                );
+                let (rect, response) =
+                    ui.allocate_exact_size(egui::vec2(card_w, card_h), egui::Sense::click());
 
                 let bg_color = if response.hovered() {
                     egui::Color32::from_rgb(60, 60, 65)
@@ -125,10 +121,8 @@ pub fn hub_ui_system(
 
                 // Project Cards
                 for proj in &state.projects {
-                    let (card_rect, card_resp) = ui.allocate_exact_size(
-                        egui::vec2(card_w, card_h),
-                        egui::Sense::click(),
-                    );
+                    let (card_rect, card_resp) =
+                        ui.allocate_exact_size(egui::vec2(card_w, card_h), egui::Sense::click());
 
                     let card_bg = if card_resp.hovered() {
                         egui::Color32::from_rgb(55, 55, 60)
@@ -170,12 +164,8 @@ pub fn hub_ui_system(
                             )
                         };
 
-                        ui.painter().image(
-                            tex_id,
-                            preview_rect,
-                            uv,
-                            egui::Color32::WHITE,
-                        );
+                        ui.painter()
+                            .image(tex_id, preview_rect, uv, egui::Color32::WHITE);
                     } else {
                         ui.painter().rect_filled(
                             preview_rect,

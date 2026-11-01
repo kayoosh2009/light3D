@@ -1,9 +1,9 @@
+use crate::project_manager::ProjectManager;
+use crate::{AppState, CurrentProject};
 use bevy::prelude::*;
 use bevy::render::view::screenshot::ScreenshotManager;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{egui, EguiContexts};
-use crate::project_manager::ProjectManager;
-use crate::{AppState, CurrentProject};
 
 #[derive(Resource, Default)]
 pub struct EditorUiState {
@@ -18,8 +18,9 @@ pub fn editor_ui_system(
     mut screenshot_manager: ResMut<ScreenshotManager>,
     mut ui_state: Local<EditorUiState>,
 ) {
+    let ctx = contexts.ctx_mut();
+
     if ui_state.is_exiting {
-        // На этом кадре UI не рисуется — снимаем чистый скриншот 3D-сцены
         if let Ok((window_entity, mut window)) = windows.get_single_mut() {
             let path = ProjectManager::get_projects_dir()
                 .join(&current_project.name)
@@ -33,12 +34,12 @@ pub fn editor_ui_system(
         }
         ui_state.is_exiting = false;
         next_state.set(AppState::Hub);
-        return;
     }
 
-    let ctx = contexts.ctx_mut();
-
     egui::TopBottomPanel::top("editor_top_panel").show(ctx, |ui| {
+        if ui_state.is_exiting {
+            ui.set_visible(false);
+        }
         egui::menu::bar(ui, |ui| {
             if ui.button("⏴ Hub").clicked() {
                 // Инициируем выход: скрываем панель на следующий кадр для скриншота без UI
