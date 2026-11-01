@@ -150,10 +150,30 @@ pub fn hub_ui_system(
                     );
 
                     if let Some(&tex_id) = state.project_textures.get(&proj.name) {
+                        // Center-crop UV coordinates (сохраняет пропорции без растяжения/сплющивания)
+                        let target_aspect = preview_rect.width() / preview_rect.height();
+                        let src_aspect = 16.0 / 9.0; // Соотношение экрана монитора
+
+                        let uv = if src_aspect > target_aspect {
+                            let visible_width = target_aspect / src_aspect;
+                            let offset = (1.0 - visible_width) / 2.0;
+                            egui::Rect::from_min_max(
+                                egui::pos2(offset, 0.0),
+                                egui::pos2(1.0 - offset, 1.0),
+                            )
+                        } else {
+                            let visible_height = src_aspect / target_aspect;
+                            let offset = (1.0 - visible_height) / 2.0;
+                            egui::Rect::from_min_max(
+                                egui::pos2(0.0, offset),
+                                egui::pos2(1.0, 1.0 - offset),
+                            )
+                        };
+
                         ui.painter().image(
                             tex_id,
                             preview_rect,
-                            egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+                            uv,
                             egui::Color32::WHITE,
                         );
                     } else {

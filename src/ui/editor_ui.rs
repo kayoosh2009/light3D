@@ -5,30 +5,44 @@ use bevy_egui::{egui, EguiContexts};
 use crate::project_manager::ProjectManager;
 use crate::{AppState, CurrentProject};
 
+#[derive(Resource, Default)]
+pub struct EditorUiState {
+    pub is_exiting: bool,
+}
+
 pub fn editor_ui_system(
     mut contexts: EguiContexts,
     current_project: Res<CurrentProject>,
     mut next_state: ResMut<NextState<AppState>>,
     mut windows: Query<(Entity, &mut Window), With<PrimaryWindow>>,
     mut screenshot_manager: ResMut<ScreenshotManager>,
+    mut ui_state: Local<EditorUiState>,
 ) {
+    if ui_state.is_exiting {
+        // На этом кадре UI не рисуется — снимаем чистый скриншот 3D-сцены
+        if let Ok((window_entity, mut window)) = windows.get_single_mut() {
+            let path = ProjectManager::get_projects_dir()
+                .join(&current_project.name)
+                .join("preview.png");
+
+            let _ = screenshot_manager.save_screenshot_to_disk(window_entity, path);
+
+            window.set_maximized(false);
+            window.resolution.set(800.0, 550.0);
+            window.title = "light3D - Launcher".into();
+        }
+        ui_state.is_exiting = false;
+        next_state.set(AppState::Hub);
+        return;
+    }
+
     let ctx = contexts.ctx_mut();
 
     egui::TopBottomPanel::top("editor_top_panel").show(ctx, |ui| {
         egui::menu::bar(ui, |ui| {
             if ui.button("⏴ Hub").clicked() {
-                if let Ok((window_entity, mut window)) = windows.get_single_mut() {
-                    let path = ProjectManager::get_projects_dir()
-                        .join(&current_project.name)
-                        .join("preview.png");
-                    
-                    let _ = screenshot_manager.save_screenshot_to_disk(window_entity, path);
-
-                    window.set_maximized(false);
-                    window.resolution.set(800.0, 550.0);
-                    window.title = "light3D - Launcher".into();
-                }
-                next_state.set(AppState::Hub);
+                // Инициируем выход: скрываем панель на следующий кадр для скриншота без UI
+                ui_state.is_exiting = true;
             }
 
             ui.separator();
