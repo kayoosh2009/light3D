@@ -13,6 +13,18 @@ pub enum TransformMode {
     Scale,
 }
 
+pub struct EditorIcons {
+    pub translate: Handle<Image>,
+    pub rotate: Handle<Image>,
+    pub scale: Handle<Image>,
+}
+
+pub struct EditorIcons {
+    pub translate: Handle<Image>,
+    pub rotate: Handle<Image>,
+    pub scale: Handle<Image>,
+}
+
 #[derive(Resource, Default)]
 pub struct EditorUiState {
     pub is_exiting: bool,
@@ -21,12 +33,31 @@ pub struct EditorUiState {
 
 pub fn editor_ui_system(
     mut contexts: EguiContexts,
+    asset_server: Res<AssetServer>,
     current_project: Res<CurrentProject>,
     mut next_state: ResMut<NextState<AppState>>,
     mut windows: Query<(Entity, &mut Window), With<PrimaryWindow>>,
     mut screenshot_manager: ResMut<ScreenshotManager>,
     mut ui_state: Local<EditorUiState>,
+    mut icons: Local<Option<EditorIcons>>,
 ) {
+    let icons = icons.get_or_insert_with(|| EditorIcons {
+        translate: asset_server.load("icons/translate.png"),
+        rotate: asset_server.load("icons/rotate.png"),
+        scale: asset_server.load("icons/scale.png"),
+    });
+
+    let translate_tid = contexts.image_id(&icons.translate);
+    let rotate_tid = contexts.image_id(&icons.rotate);
+    let scale_tid = contexts.image_id(&icons.scale);
+    let icons = icons.get_or_insert_with(|| EditorIcons {
+        translate: asset_server.load("icons/translate.png"),
+        rotate: asset_server.load("icons/rotate.png"),
+        scale: asset_server.load("icons/scale.png"),
+    });
+
+    let translate_tid = contexts.image_id(&icons.translate);
+    let rotate_tid = contexts.rotate_tid_or_none(&icons.rotate);
     let ctx = contexts.ctx_mut();
 
     if ui_state.is_exiting {
