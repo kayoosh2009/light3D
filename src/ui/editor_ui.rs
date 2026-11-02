@@ -19,12 +19,6 @@ pub struct EditorIcons {
     pub scale: Handle<Image>,
 }
 
-pub struct EditorIcons {
-    pub translate: Handle<Image>,
-    pub rotate: Handle<Image>,
-    pub scale: Handle<Image>,
-}
-
 #[derive(Resource, Default)]
 pub struct EditorUiState {
     pub is_exiting: bool,
@@ -50,14 +44,6 @@ pub fn editor_ui_system(
     let translate_tid = contexts.image_id(&icons.translate);
     let rotate_tid = contexts.image_id(&icons.rotate);
     let scale_tid = contexts.image_id(&icons.scale);
-    let icons = icons.get_or_insert_with(|| EditorIcons {
-        translate: asset_server.load("icons/translate.png"),
-        rotate: asset_server.load("icons/rotate.png"),
-        scale: asset_server.load("icons/scale.png"),
-    });
-
-    let translate_tid = contexts.image_id(&icons.translate);
-    let rotate_tid = contexts.rotate_tid_or_none(&icons.rotate);
     let ctx = contexts.ctx_mut();
 
     if ui_state.is_exiting {
