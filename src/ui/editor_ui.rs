@@ -77,31 +77,75 @@ pub fn editor_ui_system(
 
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 ui.label("light3D v0.1");
-                ui.separator();
-
-                // Кнопки режимов трансформации (в right_to_left отображаются слева направо: Move | Rotate | Scale)
-                let mut tool_button = |ui: &mut egui::Ui, mode: TransformMode, tid: Option<egui::TextureId>, label: &str| {
-                    let is_selected = ui_state.transform_mode == mode;
-                    let resp = if let Some(id) = tid {
-                        ui.add(
-                            egui::Button::image_and_text(
-                                egui::load::SizedTexture::new(id, [16.0, 16.0]),
-                                label,
-                            )
-                            .selected(is_selected),
-                        )
-                    } else {
-                        ui.selectable_label(is_selected, label)
-                    };
-                    if resp.clicked() {
-                        ui_state.transform_mode = mode;
-                    }
-                };
-
-                tool_button(ui, TransformMode::Scale, scale_tid, "⤢ Scale");
-                tool_button(ui, TransformMode::Rotate, rotate_tid, "⟲ Rotate");
-                tool_button(ui, TransformMode::Translate, translate_tid, "✛ Move");
             });
+        });
+
+        ui.separator();
+
+        // Полоска инструментов в стиле Roblox Studio / Blender
+        ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing = egui::vec2(6.0, 0.0);
+
+            let mut tool_button = |ui: &mut egui::Ui, mode: TransformMode, tid: Option<egui::TextureId>, label: &str| {
+                let is_selected = ui_state.transform_mode == mode;
+                let size = egui::vec2(56.0, 42.0); // Пропорция 4:3
+                let (rect, response) = ui.allocate_exact_size(size, egui::Sense::click());
+                let visuals = ui.style().interact_selectable(&response, is_selected);
+
+                if ui.is_rect_visible(rect) {
+                    if is_selected || response.hovered() {
+                        ui.painter().rect(
+                            rect,
+                            visuals.rounding,
+                            visuals.bg_fill,
+                            visuals.bg_stroke,
+                        );
+                    }
+
+                    // Иконка по центру в верхней части
+                    let icon_size = 20.0;
+                    let icon_rect = egui::Rect::from_center_size(
+                        rect.center() - egui::vec2(0.0, 7.0),
+                        egui::vec2(icon_size, icon_size),
+                    );
+
+                    if let Some(id) = tid {
+                        egui::Image::new(egui::load::SizedTexture::new(id, [icon_size, icon_size]))
+                            .paint_at(ui, icon_rect);
+                    } else {
+                        let fallback = match mode {
+                            TransformMode::Translate => "✛",
+                            TransformMode::Rotate => "⟲",
+                            TransformMode::Scale => "⤢",
+                        };
+                        ui.painter().text(
+                            icon_rect.center(),
+                            egui::Align2::CENTER_CENTER,
+                            fallback,
+                            egui::FontId::proportional(15.0),
+                            visuals.text_color(),
+                        );
+                    }
+
+                    // Текст под иконкой
+                    let text_pos = egui::pos2(rect.center().x, rect.bottom() - 9.0);
+                    ui.painter().text(
+                        text_pos,
+                        egui::Align2::CENTER_CENTER,
+                        label,
+                        egui::FontId::proportional(11.0),
+                        visuals.text_color(),
+                    );
+                }
+
+                if response.clicked() {
+                    ui_state.transform_mode = mode;
+                }
+            };
+
+            tool_button(ui, TransformMode::Translate, translate_tid, "Move");
+            tool_button(ui, TransformMode::Rotate, rotate_tid, "Rotate");
+            tool_button(ui, TransformMode::Scale, scale_tid, "Scale");
         });
     });
 }
