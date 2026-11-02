@@ -5,9 +5,18 @@ use bevy::render::view::screenshot::ScreenshotManager;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{egui, EguiContexts};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum TransformMode {
+    #[default]
+    Translate,
+    Rotate,
+    Scale,
+}
+
 #[derive(Resource, Default)]
 pub struct EditorUiState {
     pub is_exiting: bool,
+    pub transform_mode: TransformMode,
 }
 
 pub fn editor_ui_system(
@@ -51,6 +60,24 @@ pub fn editor_ui_system(
 
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 ui.label("light3D v0.1");
+                ui.separator();
+
+                // Кнопки режимов трансформации (в right_to_left отображаются слева направо: Move | Rotate | Scale)
+                ui.selectable_value(
+                    &mut ui_state.transform_mode,
+                    TransformMode::Scale,
+                    "⤢ Scale",
+                );
+                ui.selectable_value(
+                    &mut ui_state.transform_mode,
+                    TransformMode::Rotate,
+                    "⟲ Rotate",
+                );
+                ui.selectable_value(
+                    &mut ui_state.transform_mode,
+                    TransformMode::Translate,
+                    "✛ Move",
+                );
             });
         });
     });
