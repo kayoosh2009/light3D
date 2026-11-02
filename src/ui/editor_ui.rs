@@ -94,21 +94,27 @@ pub fn editor_ui_system(
                 ui.separator();
 
                 // Кнопки режимов трансформации (в right_to_left отображаются слева направо: Move | Rotate | Scale)
-                ui.selectable_value(
-                    &mut ui_state.transform_mode,
-                    TransformMode::Scale,
-                    "⤢ Scale",
-                );
-                ui.selectable_value(
-                    &mut ui_state.transform_mode,
-                    TransformMode::Rotate,
-                    "⟲ Rotate",
-                );
-                ui.selectable_value(
-                    &mut ui_state.transform_mode,
-                    TransformMode::Translate,
-                    "✛ Move",
-                );
+                let mut tool_button = |ui: &mut egui::Ui, mode: TransformMode, tid: Option<egui::TextureId>, label: &str| {
+                    let is_selected = ui_state.transform_mode == mode;
+                    let resp = if let Some(id) = tid {
+                        ui.add(
+                            egui::Button::image_and_text(
+                                egui::load::SizedTexture::new(id, [16.0, 16.0]),
+                                label,
+                            )
+                            .selected(is_selected),
+                        )
+                    } else {
+                        ui.selectable_label(is_selected, label)
+                    };
+                    if resp.clicked() {
+                        ui_state.transform_mode = mode;
+                    }
+                };
+
+                tool_button(ui, TransformMode::Scale, scale_tid, "⤢ Scale");
+                tool_button(ui, TransformMode::Rotate, rotate_tid, "⟲ Rotate");
+                tool_button(ui, TransformMode::Translate, translate_tid, "✛ Move");
             });
         });
     });
