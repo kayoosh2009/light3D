@@ -41,9 +41,9 @@ pub fn editor_ui_system(
         scale: asset_server.load("icons/scale.png"),
     });
 
-    let translate_tid = contexts.image_id(&icons.translate);
-    let rotate_tid = contexts.image_id(&icons.rotate);
-    let scale_tid = contexts.image_id(&icons.scale);
+    let translate_tid = contexts.add_image(icons.translate.clone_weak());
+    let rotate_tid = contexts.add_image(icons.rotate.clone_weak());
+    let scale_tid = contexts.add_image(icons.scale.clone_weak());
     let ctx = contexts.ctx_mut();
 
     if ui_state.is_exiting {
@@ -86,7 +86,7 @@ pub fn editor_ui_system(
         ui.horizontal(|ui| {
             ui.spacing_mut().item_spacing = egui::vec2(6.0, 0.0);
 
-            let mut tool_button = |ui: &mut egui::Ui, mode: TransformMode, tid: Option<egui::TextureId>, label: &str| {
+            let mut tool_button = |ui: &mut egui::Ui, mode: TransformMode, tid: egui::TextureId, label: &str| {
                 let is_selected = ui_state.transform_mode == mode;
                 let size = egui::vec2(56.0, 42.0); // Пропорция 4:3
                 let (rect, response) = ui.allocate_exact_size(size, egui::Sense::click());
@@ -109,23 +109,8 @@ pub fn editor_ui_system(
                         egui::vec2(icon_size, icon_size),
                     );
 
-                    if let Some(id) = tid {
-                        egui::Image::new(egui::load::SizedTexture::new(id, [icon_size, icon_size]))
-                            .paint_at(ui, icon_rect);
-                    } else {
-                        let fallback = match mode {
-                            TransformMode::Translate => "✛",
-                            TransformMode::Rotate => "⟲",
-                            TransformMode::Scale => "⤢",
-                        };
-                        ui.painter().text(
-                            icon_rect.center(),
-                            egui::Align2::CENTER_CENTER,
-                            fallback,
-                            egui::FontId::proportional(15.0),
-                            visuals.text_color(),
-                        );
-                    }
+                    egui::Image::new(egui::load::SizedTexture::new(tid, [icon_size, icon_size]))
+                        .paint_at(ui, icon_rect);
 
                     // Текст под иконкой
                     let text_pos = egui::pos2(rect.center().x, rect.bottom() - 9.0);
